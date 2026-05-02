@@ -1,4 +1,3 @@
-cat > linker.ld << 'EOF'
 OUTPUT_FORMAT("binary")
 ENTRY(start)
 SECTIONS {
