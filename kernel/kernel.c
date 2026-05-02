@@ -12,10 +12,10 @@ static inline unsigned char inb(unsigned short port) {
     asm volatile("inb %1, %0" : "=a"(ret) : "Nd"(port));
     return ret;
 }
-static void putchar_at(char c, unsigned int off) {
+void putchar_at(char c, unsigned int off) {
     VGA_BUF[off] = 0x0F00 | (unsigned char)c;
 }
-static void print_at(const char *s, unsigned int off) {
+void print_at(const char *s, unsigned int off) {
     while (*s) VGA_BUF[off++] = 0x0F00 | (unsigned char)(*s++);
 }
 

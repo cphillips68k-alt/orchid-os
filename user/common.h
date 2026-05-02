@@ -1,5 +1,4 @@
 /* user/common.h - Shared types and constants for ring 3 services */
-#pragma once
 
 #define MSG_SIZE 128
 
@@ -23,3 +22,7 @@ typedef struct {
 #define PID_RAMDISK 4
 #define PID_SHELL   5
 #define PID_RUNTIME 6
+
+/* kernel utility functions available to services */
+void putchar_at(char c, unsigned int off);
+void print_at(const char *s, unsigned int off);
