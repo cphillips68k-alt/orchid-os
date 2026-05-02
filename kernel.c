@@ -395,46 +395,42 @@ void kernel_main(void) {
 /* ---- VGA server (ring 3) ------------------------------------------------- */
 void vga_server_main(void) {
     unsigned int my_pid;
-    asm volatile("mov $4, %%eax; int $0x80; mov %%eax, %0" : "=r"(my_pid));
+    asm volatile("mov $4, %%eax; int $0x80" : "=a"(my_pid));
     
-    asm volatile("mov $1, %eax; mov $'V', %ebx; mov $170, %ecx; int $0x80");
-    asm volatile("mov $1, %eax; mov $'G', %ebx; mov $172, %ecx; int $0x80");
-    asm volatile("mov $1, %eax; mov $'A', %ebx; mov $174, %ecx; int $0x80");
+    asm volatile("int $0x80" : : "a"(1), "b"('V'), "c"(170));
+    asm volatile("int $0x80" : : "a"(1), "b"('G'), "c"(172));
+    asm volatile("int $0x80" : : "a"(1), "b"('A'), "c"(174));
     
     while(1) {
         message_t msg;
-        asm volatile("mov $3, %%eax; mov %0, %%ebx; int $0x80" 
-                     : : "r"(&msg) : "eax", "ebx");
+        asm volatile("mov $3, %%eax; int $0x80" : : "b"(&msg) : "eax");
     }
 }
 
 /* ---- Keyboard server (ring 3) -------------------------------------------- */
 void kbd_server_main(void) {
     unsigned int my_pid;
-    asm volatile("mov $4, %%eax; int $0x80; mov %%eax, %0" : "=r"(my_pid));
+    asm volatile("mov $4, %%eax; int $0x80" : "=a"(my_pid));
     
-    asm volatile("mov $1, %eax; mov $'K', %ebx; mov $180, %ecx; int $0x80");
-    asm volatile("mov $1, %eax; mov $'B', %ebx; mov $182, %ecx; int $0x80");
-    asm volatile("mov $1, %eax; mov $'D', %ebx; mov $184, %ecx; int $0x80");
+    asm volatile("int $0x80" : : "a"(1), "b"('K'), "c"(180));
+    asm volatile("int $0x80" : : "a"(1), "b"('B'), "c"(182));
+    asm volatile("int $0x80" : : "a"(1), "b"('D'), "c"(184));
     
     while(1) {
         message_t msg;
-        asm volatile("mov $3, %%eax; mov %0, %%ebx; int $0x80"
-                     : : "r"(&msg) : "eax", "ebx");
+        asm volatile("mov $3, %%eax; int $0x80" : : "b"(&msg) : "eax");
     }
 }
 
 /* ---- Test task (ring 3) -------------------------------------------------- */
 void test_task_main(void) {
     unsigned int my_pid;
-    asm volatile("mov $4, %%eax; int $0x80; mov %%eax, %0" : "=r"(my_pid));
+    asm volatile("mov $4, %%eax; int $0x80" : "=a"(my_pid));
     
     int offset = 320;
     char *msg = "Hello from ring 3 test process!";
     for (int i = 0; msg[i]; i++) {
-        asm volatile("mov $1, %eax; mov %0, %ebx; mov %1, %ecx; int $0x80"
-                     : : "r"((int)msg[i]), "r"(offset + i)
-                     : "eax", "ebx", "ecx");
+        asm volatile("int $0x80" : : "a"(1), "b"((int)msg[i]), "c"(offset + i));
     }
     
     while(1) asm("nop");
