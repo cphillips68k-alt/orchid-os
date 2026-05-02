@@ -1,4 +1,7 @@
 /* runtime.c - Nectar language runtime */
+
+#include "common.h"
+
 void runtime_service_main(void) {
     /* placeholder, will JIT later */
     while (1) {

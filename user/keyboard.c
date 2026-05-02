@@ -1,4 +1,7 @@
 /* keyboard.c - Keyboard server */
+
+#include "common.h"
+
 extern void putchar_at(char c, unsigned int off);
 static unsigned char scancode_to_ascii(unsigned char sc, int shift) {
     static const char normal[] = 

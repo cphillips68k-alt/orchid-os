@@ -1,4 +1,7 @@
 /* vga.c - VGA server */
+
+#include "common.h"
+
 extern void putchar_at(char c, unsigned int off);  /* kernel function, still accessible because flat memory */
 extern int spawn_process(void (*entry)()); /* not needed here, but included for completeness */
 

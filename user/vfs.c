@@ -1,4 +1,7 @@
 /* vfs.c - Virtual File System server */
+
+#include "common.h"
+
 #define MAX_FD 8
 typedef struct {
     unsigned int file_pid;   /* PID of the storage server (ramdisk) */

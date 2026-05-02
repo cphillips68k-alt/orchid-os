@@ -1,4 +1,7 @@
 /* shell.c - Simple shell */
+
+#include "common.h"
+
 extern void putchar_at(char c, unsigned int off);
 void shell_main(void) {
     putchar_at('S', 160);

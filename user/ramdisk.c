@@ -1,4 +1,7 @@
 /* ramdisk.c - Ramdisk server */
+
+#include "common.h"
+
 typedef struct {
     char name[32];
     unsigned int size;
