@@ -1,11 +1,11 @@
-OUTPUT_FORMAT("binary")
+OUTPUT_FORMAT(binary)
 ENTRY(start)
-SECTIONS {
+SECTIONS
+{
     . = 0x10000;
     .text : { *(.text*) }
     .rodata : { *(.rodata*) }
     .data : { *(.data*) }
     .bss : { *(.bss*) }
-    /DISCARD/ : { *(.comment) *(.note*) }
 }
 EOF
