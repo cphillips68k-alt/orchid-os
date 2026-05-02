@@ -237,18 +237,39 @@ void kernel_main(void) {
 
 /* ---- User tasks (ring 3) ----------------------------------------------- */
 void task1_main(void) {
-    /* Print a growing line of dots to show task is running */
-    for (int i = 0; i < 20; i++) {
-        asm volatile("mov $1, %%eax; mov %0, %%ebx; mov %1, %%ecx; int $0x80"
-                     : : "r"((int)'.'), "r"(168 + i));
-    }
+    asm volatile(
+        "mov $1, %%eax; mov $'.', %%ebx; mov $168, %%ecx; int $0x80\n"
+        "mov $1, %%eax; mov $'.', %%ebx; mov $170, %%ecx; int $0x80\n"
+        "mov $1, %%eax; mov $'.', %%ebx; mov $172, %%ecx; int $0x80\n"
+        "mov $1, %%eax; mov $'.', %%ebx; mov $174, %%ecx; int $0x80\n"
+        "mov $1, %%eax; mov $'.', %%ebx; mov $176, %%ecx; int $0x80\n"
+        "mov $1, %%eax; mov $'.', %%ebx; mov $178, %%ecx; int $0x80\n"
+        "mov $1, %%eax; mov $'.', %%ebx; mov $180, %%ecx; int $0x80\n"
+        "mov $1, %%eax; mov $'.', %%ebx; mov $182, %%ecx; int $0x80\n"
+        "mov $1, %%eax; mov $'.', %%ebx; mov $184, %%ecx; int $0x80\n"
+        "mov $1, %%eax; mov $'.', %%ebx; mov $186, %%ecx; int $0x80\n"
+        :
+        :
+        : "eax", "ebx", "ecx"
+    );
     while(1) asm("nop");
 }
 
 void task2_main(void) {
-    for (int i = 0; i < 20; i++) {
-        asm volatile("mov $1, %%eax; mov %0, %%ebx; mov %1, %%ecx; int $0x80"
-                     : : "r"((int)'#'), "r"(248 + i));
-    }
+    asm volatile(
+        "mov $1, %%eax; mov $'#', %%ebx; mov $248, %%ecx; int $0x80\n"
+        "mov $1, %%eax; mov $'#', %%ebx; mov $250, %%ecx; int $0x80\n"
+        "mov $1, %%eax; mov $'#', %%ebx; mov $252, %%ecx; int $0x80\n"
+        "mov $1, %%eax; mov $'#', %%ebx; mov $254, %%ecx; int $0x80\n"
+        "mov $1, %%eax; mov $'#', %%ebx; mov $256, %%ecx; int $0x80\n"
+        "mov $1, %%eax; mov $'#', %%ebx; mov $258, %%ecx; int $0x80\n"
+        "mov $1, %%eax; mov $'#', %%ebx; mov $260, %%ecx; int $0x80\n"
+        "mov $1, %%eax; mov $'#', %%ebx; mov $262, %%ecx; int $0x80\n"
+        "mov $1, %%eax; mov $'#', %%ebx; mov $264, %%ecx; int $0x80\n"
+        "mov $1, %%eax; mov $'#', %%ebx; mov $266, %%ecx; int $0x80\n"
+        :
+        :
+        : "eax", "ebx", "ecx"
+    );
     while(1) asm("nop");
 }
