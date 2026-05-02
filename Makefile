@@ -1,7 +1,5 @@
-cat > Makefile << 'MAKEFILE'
 CC = gcc
-CFLAGS = -m32 -ffreestanding -nostdlib -nostdinc -fno-builtin \
-         -fno-stack-protector -nostartfiles -nodefaultlibs -O0 -c
+CFLAGS = -m32 -ffreestanding -nostdlib -nostdinc -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs -O0 -c
 AS = nasm
 ASFLAGS = -f elf32
 LD = ld
@@ -33,4 +31,3 @@ run: os-image.bin
 
 clean:
 	rm -f *.o *.elf *.bin os-image.bin
-MAKEFILE
