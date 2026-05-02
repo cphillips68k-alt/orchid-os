@@ -394,22 +394,17 @@ void kernel_main(void) {
 
 /* ---- VGA server (ring 3) ------------------------------------------------- */
 void vga_server_main(void) {
-    /* For now, just write a message to show we're alive */
     unsigned int my_pid;
     asm volatile("mov $4, %%eax; int $0x80; mov %%eax, %0" : "=r"(my_pid));
     
-    /* Write to screen directly using PUTCHAR (temporary) */
-    asm volatile("mov $1, %%eax; mov $'V', %%ebx; mov $170, %%ecx; int $0x80");
-    asm volatile("mov $1, %%eax; mov $'G', %%ebx; mov $172, %%ecx; int $0x80");
-    asm volatile("mov $1, %%eax; mov $'A', %%ebx; mov $174, %%ecx; int $0x80");
+    asm volatile("mov $1, %eax; mov $'V', %ebx; mov $170, %ecx; int $0x80");
+    asm volatile("mov $1, %eax; mov $'G', %ebx; mov $172, %ecx; int $0x80");
+    asm volatile("mov $1, %eax; mov $'A', %ebx; mov $174, %ecx; int $0x80");
     
-    /* Now wait for messages and process them */
     while(1) {
         message_t msg;
-        /* RECV from anyone (0 = wildcard for now) */
         asm volatile("mov $3, %%eax; mov %0, %%ebx; int $0x80" 
                      : : "r"(&msg) : "eax", "ebx");
-        /* We'd process the message here */
     }
 }
 
@@ -418,9 +413,9 @@ void kbd_server_main(void) {
     unsigned int my_pid;
     asm volatile("mov $4, %%eax; int $0x80; mov %%eax, %0" : "=r"(my_pid));
     
-    asm volatile("mov $1, %%eax; mov $'K', %%ebx; mov $180, %%ecx; int $0x80");
-    asm volatile("mov $1, %%eax; mov $'B', %%ebx; mov $182, %%ecx; int $0x80");
-    asm volatile("mov $1, %%eax; mov $'D', %%ebx; mov $184, %%ecx; int $0x80");
+    asm volatile("mov $1, %eax; mov $'K', %ebx; mov $180, %ecx; int $0x80");
+    asm volatile("mov $1, %eax; mov $'B', %ebx; mov $182, %ecx; int $0x80");
+    asm volatile("mov $1, %eax; mov $'D', %ebx; mov $184, %ecx; int $0x80");
     
     while(1) {
         message_t msg;
@@ -434,12 +429,12 @@ void test_task_main(void) {
     unsigned int my_pid;
     asm volatile("mov $4, %%eax; int $0x80; mov %%eax, %0" : "=r"(my_pid));
     
-    /* Print on row 3 */
-    int offset = 240;
+    int offset = 320;
     char *msg = "Hello from ring 3 test process!";
     for (int i = 0; msg[i]; i++) {
-        asm volatile("mov $1, %%eax; mov %0, %%ebx; mov %1, %%ecx; int $0x80"
-                     : : "r"((int)msg[i]), "r"(offset + i));
+        asm volatile("mov $1, %eax; mov %0, %ebx; mov %1, %ecx; int $0x80"
+                     : : "r"((int)msg[i]), "r"(offset + i)
+                     : "eax", "ebx", "ecx");
     }
     
     while(1) asm("nop");
