@@ -169,9 +169,24 @@ unsigned int timer_handler(unsigned int esp) {
 /* ---- keyboard handler ---- */
 void keyboard_handler(void) {
     unsigned char sc = inb(0x60);
+    
+    /* Display scancode on status bar */
     char hex[] = "0123456789ABCDEF";
     putchar_at(hex[sc >> 4], 78*2);
     putchar_at(hex[sc & 0xF], 78*2 + 1);
+    
+    /* Forward scancode to keyboard server (PID 2) */
+    message_t msg;
+    msg.type = 1;
+    msg.data[0] = sc;
+    msg.data[1] = 0;
+    
+    /* Deliver directly to keyboard server if it's waiting */
+    if (procs[PID_KBD].state == PROC_RECEIVING) {
+        procs[PID_KBD].pending_msg = msg;
+        procs[PID_KBD].has_message = 1;
+        procs[PID_KBD].state = PROC_READY;
+    }
 }
 
 /* ---- syscall handler ---- */
