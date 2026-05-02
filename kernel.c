@@ -1,7 +1,6 @@
 /* kernel.c - Orchid OS 32-bit C kernel
  * Three things: interrupts, scheduler, ring 0/3 separation */
 #define VGA_BUF ((volatile unsigned short *)0xB8000)
-static unsigned int cursor = 0;
 
 /* ---- basic I/O --------------------------------------------------------- */
 static inline void outb(unsigned short port, unsigned char val) {
@@ -13,8 +12,8 @@ static inline unsigned char inb(unsigned short port) {
     return ret;
 }
 
-static void print(const char *s) {
-    while (*s) VGA_BUF[cursor++] = 0x0F00 | (unsigned char)(*s++);
+static void print_at(const char *s, unsigned int off) {
+    while (*s) VGA_BUF[off++] = 0x0F00 | (unsigned char)(*s++);
 }
 static void putchar_at(char c, unsigned int off) {
     VGA_BUF[off] = 0x0F00 | (unsigned char)c;
@@ -111,7 +110,7 @@ struct regs {
 };
 
 void syscall_handler(struct regs *r) {
-    if (r->eax == 1) {                    // SYS_WRITE
+    if (r->eax == 1) {
         putchar_at((char)r->ebx, r->ecx);
     }
 }
@@ -132,32 +131,49 @@ unsigned int schedule(unsigned int current_esp) {
 unsigned int timer_handler(unsigned int esp) {
     static int ticks = 0;
     ticks++;
-    putchar_at('0' + (ticks % 10), 158);   // visible heartbeat
+    /* Draw a clean status bar on row 0, column 70 */
+    putchar_at('[', 70);
+    putchar_at(current_task ? '2' : '1', 71);
+    putchar_at(']', 72);
+    putchar_at('0' + ((ticks/10) % 10), 74);
+    putchar_at('0' + (ticks % 10), 75);
+    putchar_at('H', 77);
+    putchar_at('z', 78);
     return schedule(esp);
 }
 
 /* ---- Keyboard handler -------------------------------------------------- */
 void keyboard_handler(void) {
     unsigned char sc = inb(0x60);
-    putchar_at(sc, 156);                    // raw scancode
+    /* Show last scancode in bottom-right */
+    putchar_at("0123456789ABCDEF"[sc >> 4], 78*2);
+    putchar_at("0123456789ABCDEF"[sc & 0xF], 78*2 + 1);
 }
 
 /* ---- Kernel main ------------------------------------------------------- */
 void kernel_main(void) {
     int i;
-    for (i = 0; i < 80*25; i++) VGA_BUF[i] = 0x0F20;   // clear
-    cursor = 0;
-    print("Orchid OS v0.3 - C kernel");
-    cursor = 160;
-    print("Interrupts, scheduler, ring 3");
+    for (i = 0; i < 80*25; i++) VGA_BUF[i] = 0x0F20;
 
-    /* ----- GDT (ring0 + ring3 + TSS) ----- */
+    /* Header on row 0 */
+    print_at("Orchid OS v0.3", 0);
+    /* Separator on row 1 */
+    for (i = 0; i < 80; i++) putchar_at(0xC4, 80 + i);  /* horizontal line */
+
+    /* Label the task rows */
+    print_at("Task 1:", 160);
+    print_at("Task 2:", 240);
+
+    /* Status line */
+    print_at("Scheduler: [  ]    Hz  Key:", 24*80);
+
+    /* ----- GDT ----- */
     set_gdt_entry(0, 0, 0, 0, 0);
-    set_gdt_entry(1, 0, 0xFFFFF, 0x9A, 0xCF);  // ring0 code
-    set_gdt_entry(2, 0, 0xFFFFF, 0x92, 0xCF);  // ring0 data
-    set_gdt_entry(3, 0, 0xFFFFF, 0xFA, 0xCF);  // ring3 code
-    set_gdt_entry(4, 0, 0xFFFFF, 0xF2, 0xCF);  // ring3 data
-    set_gdt_entry(5, (unsigned int)&tss, sizeof(tss)-1, 0x89, 0x00); // TSS
+    set_gdt_entry(1, 0, 0xFFFFF, 0x9A, 0xCF);
+    set_gdt_entry(2, 0, 0xFFFFF, 0x92, 0xCF);
+    set_gdt_entry(3, 0, 0xFFFFF, 0xFA, 0xCF);
+    set_gdt_entry(4, 0, 0xFFFFF, 0xF2, 0xCF);
+    set_gdt_entry(5, (unsigned int)&tss, sizeof(tss)-1, 0x89, 0x00);
     gp.limit = sizeof(gdt)-1;
     gp.base = (unsigned int)gdt;
     asm volatile("lgdt %0" : : "m"(gp));
@@ -176,29 +192,29 @@ void kernel_main(void) {
     ip.base = (unsigned int)idt;
     asm volatile("lidt %0" : : "m"(ip));
 
-    /* ----- PIC remap & unmask IRQ0, IRQ1 ----- */
+    /* ----- PIC ----- */
     outb(0x20, 0x11); outb(0xA0, 0x11);
     outb(0x21, 0x20); outb(0xA1, 0x28);
     outb(0x21, 0x04); outb(0xA1, 0x02);
     outb(0x21, 0x01); outb(0xA1, 0x01);
-    outb(0x21, 0xFC); // enable timer & keyboard
+    outb(0x21, 0xFC);
     outb(0xA1, 0xFF);
 
-    /* ----- PIT 100 Hz ----- */
+    /* ----- PIT ----- */
     outb(0x43, 0x36);
     outb(0x40, 11931 & 0xFF);
     outb(0x40, 11931 >> 8);
 
-    /* ----- Prepare task contexts (kernel stacks + iret frames) ----- */
+    /* ----- Task contexts ----- */
     unsigned int *ksp;
 
     ksp = (unsigned int *)(task1_kstack + STACK_SIZE);
-    *--ksp = 0x23;                           // user SS
-    *--ksp = (unsigned int)(task1_ustack + STACK_SIZE); // user ESP
-    *--ksp = 0x202;                          // EFLAGS
-    *--ksp = 0x1B;                           // user CS
-    *--ksp = (unsigned int)task1_main;       // user EIP
-    for (i = 0; i < 8; i++) *--ksp = 0;     // dummy pushad
+    *--ksp = 0x23;
+    *--ksp = (unsigned int)(task1_ustack + STACK_SIZE);
+    *--ksp = 0x202;
+    *--ksp = 0x1B;
+    *--ksp = (unsigned int)task1_main;
+    for (i = 0; i < 8; i++) *--ksp = 0;
     task1_ksp = (unsigned int)ksp;
 
     ksp = (unsigned int *)(task2_kstack + STACK_SIZE);
@@ -212,7 +228,6 @@ void kernel_main(void) {
 
     current_task = 0;
 
-    /* Jump to ring 3 (task1) */
     asm volatile("mov %0, %%esp\n\t"
                  "popal\n\t"
                  "iret"
@@ -222,14 +237,18 @@ void kernel_main(void) {
 
 /* ---- User tasks (ring 3) ----------------------------------------------- */
 void task1_main(void) {
-    asm("mov $1, %eax; mov $'>', %ebx; mov $320, %ecx; int $0x80");
-    asm("mov $1, %eax; mov $'T', %ebx; mov $322, %ecx; int $0x80");
-    asm("mov $1, %eax; mov $'1', %ebx; mov $324, %ecx; int $0x80");
+    /* Print a growing line of dots to show task is running */
+    for (int i = 0; i < 20; i++) {
+        asm volatile("mov $1, %%eax; mov %0, %%ebx; mov %1, %%ecx; int $0x80"
+                     : : "r"((int)'.'), "r"(168 + i));
+    }
     while(1) asm("nop");
 }
+
 void task2_main(void) {
-    asm("mov $1, %eax; mov $'>', %ebx; mov $480, %ecx; int $0x80");
-    asm("mov $1, %eax; mov $'T', %ebx; mov $482, %ecx; int $0x80");
-    asm("mov $1, %eax; mov $'2', %ebx; mov $484, %ecx; int $0x80");
+    for (int i = 0; i < 20; i++) {
+        asm volatile("mov $1, %%eax; mov %0, %%ebx; mov %1, %%ecx; int $0x80"
+                     : : "r"((int)'#'), "r"(248 + i));
+    }
     while(1) asm("nop");
 }
