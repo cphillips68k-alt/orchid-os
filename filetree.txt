@@ -1,0 +1,17 @@
+orchid-os/
+├── asm/
+│   ├── boot.asm    
+│   └── entry.asm     
+├── kernel/
+│   └── kernel.c     
+├── user/
+│   ├── vga.c
+│   ├── keyboard.c
+│   ├── ramdisk.c
+│   ├── vfs.c
+│   ├── shell.c
+│   └── runtime.c
+├── linker.ld
+├── Makefile
+├── LICENSE
+└── run.sh
