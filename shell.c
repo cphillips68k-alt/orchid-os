@@ -36,7 +36,7 @@ static void cmd_help(s32 argc, char **argv) {
     (void)argc; (void)argv;
     printf("Orchid OS Shell Commands:\n");
     for (s32 i = 0; i < cmd_count; i++) {
-        printf("  %s — %s\n", cmd_table[i].name, cmd_table[i].help);
+        printf("  %s - %s\n", cmd_table[i].name, cmd_table[i].help);
     }
 }
 

@@ -2,7 +2,7 @@
 #include "lib.h"
 #include "printf.h"
 
-#define PMM_STACK_SIZE 0x8000  // Can track up to 32K frames
+#define PMM_STACK_SIZE 0x8000
 #define FRAME_SIZE 4096
 
 static u32 pmm_stack[PMM_STACK_SIZE];
@@ -11,37 +11,32 @@ static u32 total_frames;
 static u32 free_frames;
 
 void pmm_init(multiboot_info_t *mb) {
-    multiboot_mmap_tag_t *mmap = &mb->mmap;
-    multiboot_mmap_entry_t *entry = mboot_mmap_first(mb);
-
+    // Use basic meminfo (always reliable, no mmap parsing)
+    u32 mem_upper_kb = mb->mem_info.mem_upper;
+    u32 mem_kb = mem_upper_kb + 1024; // + first 1MB (mem_lower is below 1MB, we count from 0)
+    u32 total = mem_kb;
+    
+    total_frames = total / 4; // 4 KB per frame
+    free_frames  = 0;
     pmm_stack_top = 0;
-    total_frames = 0;
-    free_frames = 0;
-
-    while (entry) {
-        if (entry->type == 1) { // Available memory
-            u64 base = entry->base_addr;
-            u64 length = entry->length;
-
-            // Align base up to page boundary
-            u32 start_frame = (base + FRAME_SIZE - 1) / FRAME_SIZE;
-            u32 end_frame   = (base + length) / FRAME_SIZE;
-
-            // Don't use memory below 1 MB (hardware reserved area)
-            if (start_frame < 256) start_frame = 256;
-            // Don't use first 4 MB (our kernel lives there)
-            if (start_frame < 1024) start_frame = 1024;
-
-            for (u32 i = start_frame; i < end_frame && pmm_stack_top < PMM_STACK_SIZE; i++) {
-                pmm_stack[pmm_stack_top++] = i;
-                free_frames++;
-            }
-            total_frames += (end_frame - start_frame);
-        }
-        entry = mboot_mmap_next(mmap, entry);
+    
+    // Mark first 8 MB as used (kernel space)
+    u32 kernel_end_frame = (8 * 1024 * 1024) / FRAME_SIZE;
+    
+    // Stack free frames (from kernel end to top of memory)
+    u32 max_frame = total_frames;
+    if (max_frame > PMM_STACK_SIZE + kernel_end_frame) {
+        max_frame = PMM_STACK_SIZE + kernel_end_frame;
     }
-
-    printf("[PMM] %u frames available (%u MB)\n", free_frames, free_frames * 4 / 1024);
+    
+    for (u32 i = max_frame - 1; i >= kernel_end_frame; i--) {
+        if (pmm_stack_top < PMM_STACK_SIZE) {
+            pmm_stack[pmm_stack_top++] = i;
+            free_frames++;
+        }
+    }
+    
+    printf("[PMM] %u frames available (%u KB)\n", free_frames, free_frames * 4);
 }
 
 u32 pmm_alloc_frame(void) {
