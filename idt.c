@@ -191,13 +191,15 @@ void isr_handler(interrupt_frame_t *frame) {
 void irq_handler(interrupt_frame_t *frame) {
     (void)frame;
     
-    // Read IRQ number — we need to know which IRQ fired
-    // The PIC tells us: read the ISR register
-    // For now, handle keyboard (IRQ1) explicitly
+    static u32 last_ticks = 0;
+    static u32 tick_count = 0;
     
-    u8 scancode = inb(0x60); // Keyboard data port (only valid for IRQ1)
+    u8 scancode = inb(0x60);
     
-    // Convert scancode to ASCII (US QWERTY, no shift for now)
+    // Check if it's a key release (bit 7 set) — ignore those
+    u8 released = scancode & 0x80;
+    scancode &= 0x7F;
+    
     static const char scancode_to_ascii[] = {
         0,   0,   '1','2','3','4','5','6','7','8','9','0','-','=', '\b',
         '\t','q','w','e','r','t','y','u','i','o','p','[',']','\n',
@@ -206,12 +208,17 @@ void irq_handler(interrupt_frame_t *frame) {
         '*', 0,   ' ', 0,
     };
 
-    if (scancode < sizeof(scancode_to_ascii)) {
+    if (!released && scancode < sizeof(scancode_to_ascii)) {
         char c = scancode_to_ascii[scancode];
         if (c) {
-            shell_handle_key(c);
+            // 20-tick delay before repeat (~1 second at 18.2 Hz PIT)
+            if (tick_count - last_ticks > 20 || tick_count == 0) {
+                shell_handle_key(c);
+                last_ticks = tick_count;
+            }
         }
     }
-
-    pic_send_eoi(1); // IRQ1
+    
+    tick_count++;
+    pic_send_eoi(1);
 }
