@@ -189,6 +189,8 @@ void isr_handler(interrupt_frame_t *frame) {
 }
 
 void irq_handler(interrupt_frame_t *frame) {
+    (void)frame;
+    u16 isr = inb(0x20);
     if (isr & 0x02) { // IRQ1 — Keyboard
         u8 scancode = inb(0x60);
         u8 released = scancode & 0x80;
