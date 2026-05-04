@@ -1,13 +1,14 @@
-global gdt_flush
+# gdt_flush.S — AT&T syntax
+.globl gdt_flush
 gdt_flush:
-    mov eax, [esp+4]    ; gdt_ptr address
-    lgdt [eax]
-    mov ax, 0x10        ; kernel data segment (offset 0x10 from GDT base)
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-    mov ss, ax
-    jmp 0x08:.flush     ; far jump to kernel code segment (offset 0x08)
+    movl 4(%esp), %eax
+    lgdt (%eax)
+    movw $0x10, %ax
+    movw %ax, %ds
+    movw %ax, %es
+    movw %ax, %fs
+    movw %ax, %gs
+    movw %ax, %ss
+    ljmp $0x08, $.flush
 .flush:
-    ret
+    retl
