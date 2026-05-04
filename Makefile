@@ -1,10 +1,16 @@
-CC = i686-elf-gcc
-AS = i686-elf-as
-LD = i686-elf-ld
+CC = clang
+LD = ld.lld
+AS = clang
 
-CFLAGS = -std=c99 -ffreestanding -O2 -Wall -Wextra -I.
-ASFLAGS = --32
-LDFLAGS = -T linker.ld -ffreestanding -nostdlib -lgcc
+TARGET = i686-unknown-unknown
+
+CFLAGS = -target $(TARGET) -std=c99 -ffreestanding -O2 -Wall -Wextra -I. \
+         -mno-sse -mno-mmx -mno-sse2 -mno-80387 \
+         -fno-stack-protector -fno-builtin
+
+ASFLAGS = -target $(TARGET) -c
+
+LDFLAGS = -T linker.ld -nostdlib
 
 OBJ = boot.o gdt_flush.o kernel.o gdt.o idt.o pic.o paging.o pmm.o vga.o printf.o lib.o
 
@@ -32,4 +38,4 @@ iso: kernel.bin
 	grub-mkrescue -o your-os.iso iso/
 
 qemu: iso
-	qemu-system-i386 -cdrom your-os.iso
+	qemu-system-i386 -cdrom orchid.iso
