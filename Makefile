@@ -13,7 +13,7 @@ ASFLAGS = -target $(TARGET) -c
 LDFLAGS = -T linker.ld -nostdlib
 
 OBJ = boot.o gdt_flush.o idt_flush.o paging.o idt.o \
-      kernel.o gdt.o pic.o paging_c.o pmm.o multiboot.o \
+      kernel.o gdt.o pic.o pmm.o multiboot.o \
       vga.o printf.o lib.o
 
 kernel.bin: $(OBJ)
