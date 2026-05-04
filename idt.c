@@ -188,10 +188,14 @@ void isr_handler(interrupt_frame_t *frame) {
     asm volatile("cli; hlt");
 }
 
-void irq_handler(interrupt_frame_t *frame) {
-    (void)frame;
-    u16 isr = inb(0x20);
-    if (isr & 0x02) { // IRQ1 — Keyboard
+void irq_handler(u32 irq) {
+    if (irq == 0) { // PIT timer
+        g_ticks++;
+        pic_send_eoi(0);
+        return;
+    }
+    
+    if (irq == 1) { // Keyboard
         u8 scancode = inb(0x60);
         u8 released = scancode & 0x80;
         scancode &= 0x7F;
@@ -217,4 +221,7 @@ void irq_handler(interrupt_frame_t *frame) {
         pic_send_eoi(1);
         return;
     }
+    
+    // Other IRQs — just EOI
+    if (irq < 16) pic_send_eoi(irq);
 }
