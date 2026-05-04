@@ -17,12 +17,6 @@ OBJ = boot.o gdt_flush.o idt_flush.o \
       kernel.o gdt.o pic.o paging.o idt.o pmm.o multiboot.o \
       vga.o printf.o lib.o
 
-idt_stubs.o: idt.S
-	$(AS) $(ASFLAGS) -o $@ $<
-
-paging_stubs.o: paging.S
-	$(AS) $(ASFLAGS) -o $@ $<
-
 kernel.bin: $(OBJ)
 	$(LD) $(LDFLAGS) -o $@ $^
 
@@ -30,6 +24,12 @@ kernel.bin: $(OBJ)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 %.o: %.S
+	$(AS) $(ASFLAGS) -o $@ $<
+
+idt_stubs.o: idt.S
+	$(AS) $(ASFLAGS) -o $@ $<
+
+paging_stubs.o: paging.S
 	$(AS) $(ASFLAGS) -o $@ $<
 
 clean:
