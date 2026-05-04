@@ -12,7 +12,9 @@ ASFLAGS = -target $(TARGET) -c
 
 LDFLAGS = -T linker.ld -nostdlib
 
-OBJ = boot.o gdt_flush.o kernel.o gdt.o idt.o pic.o paging.o pmm.o vga.o printf.o lib.o
+OBJ = boot.o gdt_flush.o idt_flush.o paging.o idt.o \
+      kernel.o gdt.o pic.o paging_c.o pmm.o multiboot.o \
+      vga.o printf.o lib.o
 
 kernel.bin: $(OBJ)
 	$(LD) $(LDFLAGS) -o $@ $^
@@ -20,7 +22,7 @@ kernel.bin: $(OBJ)
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-%.o: %.s
+%.o: %.S
 	$(AS) $(ASFLAGS) -o $@ $<
 
 clean:
@@ -31,11 +33,11 @@ iso: kernel.bin
 	cp kernel.bin iso/boot/
 	echo 'set timeout=0' > iso/boot/grub/grub.cfg
 	echo 'set default=0' >> iso/boot/grub/grub.cfg
-	echo 'menuentry "YourOS" {' >> iso/boot/grub/grub.cfg
+	echo 'menuentry "Orchid OS" {' >> iso/boot/grub/grub.cfg
 	echo '    multiboot2 /boot/kernel.bin' >> iso/boot/grub/grub.cfg
 	echo '    boot' >> iso/boot/grub/grub.cfg
 	echo '}' >> iso/boot/grub/grub.cfg
-	grub-mkrescue -o your-os.iso iso/
+	grub-mkrescue -o orchid.iso iso/
 
 qemu: iso
 	qemu-system-i386 -cdrom orchid.iso

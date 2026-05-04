@@ -8,14 +8,18 @@
 #include "printf.h"
 #include "multiboot.h"
 
+static void hang(void) {
+    asm volatile("cli; hlt");
+}
+
 void kernel_main(u32 magic, multiboot_info_t *mb_info) {
     vga_clear();
     vga_set_color(VGA_WHITE, VGA_BLACK);
     
-    printf("=== your-os-name 0.0.1 ===\n\n");
+    printf("Orchid OS 0.0.1\n\n");
     
     if (magic != MULTIBOOT2_MAGIC) {
-        printf("[FATAL] Invalid bootloader magic\n");
+        printf("[FATAL] Invalid bootloader magic: %x\n", magic);
         hang();
     }
     
@@ -39,12 +43,13 @@ void kernel_main(u32 magic, multiboot_info_t *mb_info) {
     pmm_init(mb_info);
     printf("ok\n");
     
-    printf("\n[READY] Kernel booted successfully\n");
+    printf("\n[READY] Orchid OS booted successfully\n");
     printf("[MEM]  Total: %u MB  Free: %u MB\n",
            pmm_total_mb(), pmm_free_mb());
     
-    // Enable interrupts for the first time
+    printf("\nEnabling interrupts... ");
     asm volatile("sti");
+    printf("done\n");
     
     hang();
 }
