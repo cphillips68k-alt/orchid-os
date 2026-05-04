@@ -71,7 +71,7 @@ static void shell_execute(const char *line) {
     s32 argc = 0;
 
     // Copy so we can tokenize
-    lib_memcpy(args_buf, line, MAX_CMD_LEN);
+    memcpy(args_buf, line, MAX_CMD_LEN);
     args_buf[MAX_CMD_LEN - 1] = '\0';
 
     char *p = args_buf;
@@ -91,8 +91,8 @@ static void shell_execute(const char *line) {
 
     // Find command
     for (s32 i = 0; i < cmd_count; i++) {
-        if (lib_strcmp(argv[0], cmd_table[i].name) == 0) {
-            cmd_table[i].func(argc, argv);
+        if (strcmp(argv[0], cmd_table[i].name) == 0) {
+                cmd_table[i].func(argc, argv);
             return;
         }
     }
@@ -100,8 +100,8 @@ static void shell_execute(const char *line) {
     printf("Unknown command: %s\nType 'help' for a list.\n", argv[0]);
 }
 
-static void shell_handle_key(char c) {
-    if (c == '\n' || c == '\r') {
+void shell_handle_key(char c) {
+        if (c == '\n' || c == '\r') {
         vga_putchar('\n');
         input_buf[input_pos] = '\0';
         shell_execute(input_buf);
