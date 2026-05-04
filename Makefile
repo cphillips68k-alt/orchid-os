@@ -6,7 +6,7 @@ TARGET = i686-unknown-unknown
 
 CFLAGS = -target $(TARGET) -std=c99 -ffreestanding -O2 -Wall -Wextra -I. \
          -mno-sse -mno-mmx -mno-sse2 -mno-80387 \
-         -fno-stack-protector -fno-builtin
+         -fno-stack-protector -fno-builtin -fasm
 
 ASFLAGS = -target $(TARGET) -c
 
