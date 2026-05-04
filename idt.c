@@ -5,6 +5,8 @@
 #include "shell.h"
 #include "types.h"   // for inb
 
+volatile u32 g_ticks = 0;
+
 struct idt_entry {
     u16 base_low;
     u16 sel;
