@@ -7,6 +7,7 @@
 #include "pmm.h"
 #include "printf.h"
 #include "multiboot.h"
+#include "shell.h"
 
 static void hang(void) {
     asm volatile("cli; hlt");
@@ -51,5 +52,13 @@ void kernel_main(u32 magic, multiboot_info_t *mb_info) {
     asm volatile("sti");
     printf("done\n");
     
-    hang();
+    printf("\nStarting shell...\n\n");
+    shell_init();
+    shell_prompt();
+    asm volatile("sti");
+
+    // Idle loop — shell runs off keyboard interrupts
+    while (1) {
+        asm volatile("hlt");
+    }
 }

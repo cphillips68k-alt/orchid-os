@@ -2,6 +2,8 @@
 #include "pic.h"
 #include "printf.h"
 #include "types.h"
+#include "shell.h"
+#include "types.h"   // for inb
 
 struct idt_entry {
     u16 base_low;
@@ -187,11 +189,29 @@ void isr_handler(interrupt_frame_t *frame) {
 }
 
 void irq_handler(interrupt_frame_t *frame) {
-    // Handle IRQs 0-15
     (void)frame;
     
-    // Default: send EOI for IRQs 0-7
-    pic_send_eoi(0);
+    // Read IRQ number — we need to know which IRQ fired
+    // The PIC tells us: read the ISR register
+    // For now, handle keyboard (IRQ1) explicitly
     
-    // We'll add real IRQ dispatch later (keyboard, timer, etc.)
+    u8 scancode = inb(0x60); // Keyboard data port (only valid for IRQ1)
+    
+    // Convert scancode to ASCII (US QWERTY, no shift for now)
+    static const char scancode_to_ascii[] = {
+        0,   0,   '1','2','3','4','5','6','7','8','9','0','-','=', '\b',
+        '\t','q','w','e','r','t','y','u','i','o','p','[',']','\n',
+        0,   'a','s','d','f','g','h','j','k','l',';','\'','`',
+        0,   '\\','z','x','c','v','b','n','m',',','.','/', 0,
+        '*', 0,   ' ', 0,
+    };
+
+    if (scancode < sizeof(scancode_to_ascii)) {
+        char c = scancode_to_ascii[scancode];
+        if (c) {
+            shell_handle_key(c);
+        }
+    }
+
+    pic_send_eoi(1); // IRQ1
 }
