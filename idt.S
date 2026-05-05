@@ -26,7 +26,6 @@ isr_common:
     addl $8, %esp     # pop error code and int number
     iret
 
-# Common IRQ handler
 irq_common:
     pushal
     pushw %ds
@@ -38,16 +37,19 @@ irq_common:
     movw %ax, %es
     movw %ax, %fs
     movw %ax, %gs
-    movl %esp, %eax
+    
+    # IRQ number is at esp + 44 (8 pushal regs * 4 bytes = 32, plus 4 segment pushes * 2 = 8, plus error code (4) = 44 total)
+    movl 44(%esp), %eax
     pushl %eax
     call irq_handler
     addl $4, %esp
+    
     popw %gs
     popw %fs
     popw %es
     popw %ds
     popal
-    addl $8, %esp
+    addl $8, %esp     # Pop error code and IRQ number
     iret
 
 # Macro to generate ISR stubs
