@@ -4,6 +4,7 @@
 #include "printf.h"
 #include "lib.h"
 #include "pmm.h"
+#include "fs.h"
 
 #define MAX_CMD_LEN  64
 #define MAX_ARGS     8
