@@ -191,27 +191,23 @@ void isr_handler(interrupt_frame_t *frame) {
 }
 
 void irq_handler(u32 irq) {
-    // Debug: print something on ANY IRQ
-    printf("!");
+    (void)irq;
     
-    // Read keyboard port regardless
+    static u8 last_scancode = 0;
     u8 scancode = inb(0x60);
-    
-    // Print scancode
-    printf("[%u:%x]", irq, scancode);
-    
-    if (scancode < 0x80) {
-        static const char scancode_to_ascii[] = {
-            0,   0,   '1','2','3','4','5','6','7','8','9','0','-','=', '\b',
-            '\t','q','w','e','r','t','y','u','i','o','p','[',']','\n',
-            0,   'a','s','d','f','g','h','j','k','l',';','\'','`',
-            0,   '\\','z','x','c','v','b','n','m',',','.','/', 0,
-            '*', 0,   ' ', 0,
-        };
-        if (scancode < sizeof(scancode_to_ascii)) {
-            char c = scancode_to_ascii[scancode];
-            if (c) shell_handle_key(c);
+    u8 pressed = !(scancode & 0x80);
+    u8 key = scancode & 0x7F;
+
+    if (pressed && key < 128) {
+        char c = scancode_to_ascii[key];
+        if (c && key != last_scancode) {
+            shell_handle_key(c);
+            last_scancode = key;
         }
+    }
+    
+    if (!pressed && key == last_scancode) {
+        last_scancode = 0;
     }
     
     pic_send_eoi(1);
