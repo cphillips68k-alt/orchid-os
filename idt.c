@@ -191,19 +191,16 @@ void isr_handler(interrupt_frame_t *frame) {
 }
 
 void irq_handler(u32 irq) {
-    if (irq == 0) { // PIT timer
-        g_ticks++;
-        pic_send_eoi(0);
-        return;
-    }
+    // Debug: print something on ANY IRQ
+    printf("!");
     
-    if (irq == 1) { // Keyboard
-        u8 scancode = inb(0x60);
-        u8 released = scancode & 0x80;
-        scancode &= 0x7F;
-        
-        static u8 last_scancode = 0;
-        
+    // Read keyboard port regardless
+    u8 scancode = inb(0x60);
+    
+    // Print scancode
+    printf("[%u:%x]", irq, scancode);
+    
+    if (scancode < 0x80) {
         static const char scancode_to_ascii[] = {
             0,   0,   '1','2','3','4','5','6','7','8','9','0','-','=', '\b',
             '\t','q','w','e','r','t','y','u','i','o','p','[',']','\n',
@@ -211,19 +208,11 @@ void irq_handler(u32 irq) {
             0,   '\\','z','x','c','v','b','n','m',',','.','/', 0,
             '*', 0,   ' ', 0,
         };
-
-        if (!released && scancode < sizeof(scancode_to_ascii)) {
+        if (scancode < sizeof(scancode_to_ascii)) {
             char c = scancode_to_ascii[scancode];
-            if (c && scancode != last_scancode) {
-                shell_handle_key(c);
-            }
+            if (c) shell_handle_key(c);
         }
-        last_scancode = (released) ? 0 : scancode;
-        
-        pic_send_eoi(1);
-        return;
     }
     
-    // Other IRQs — just EOI
-    if (irq < 16) pic_send_eoi(irq);
+    pic_send_eoi(1);
 }
