@@ -1,5 +1,6 @@
 #include "ramdisk.h"
 #include "types.h"
+#include "lib.h"
 
 // Minimal FAT32 ramdisk image (512 bytes per sector, 1 sector = boot sector)
 // Just enough to have a root directory with HELLO.TXT
