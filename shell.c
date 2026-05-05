@@ -63,6 +63,43 @@ static void cmd_halt(s32 argc, char **argv) {
     asm volatile("cli; hlt");
 }
 
+static void cmd_ls(s32 argc, char **argv) {
+    const char *path = (argc > 1) ? argv[1] : "/";
+    char name[FS_MAX_NAME];
+    u32 size;
+    bool is_dir;
+    u32 idx = 0;
+    
+    while (fs_list(path, name, &size, &is_dir, idx)) {
+        printf("%s", name);
+        if (is_dir) printf("/");
+        printf("  (%u bytes)\n", size);
+        idx++;
+    }
+}
+
+static void cmd_cat(s32 argc, char **argv) {
+    if (argc < 2) {
+        printf("Usage: cat <file>\n");
+        return;
+    }
+    
+    s32 fd = fs_open(argv[1]);
+    if (fd < 0) {
+        printf("File not found: %s\n", argv[1]);
+        return;
+    }
+    
+    u8 buf[128];
+    s32 bytes;
+    while ((bytes = fs_read(fd, buf, sizeof(buf) - 1)) > 0) {
+        buf[bytes] = '\0';
+        printf("%s", buf);
+    }
+    printf("\n");
+    fs_close(fd);
+}
+
 // ---- INPUT HANDLING ----
 
 static void shell_execute(const char *line) {
@@ -123,7 +160,7 @@ void shell_handle_key(char c) {
 // ---- PUBLIC API ----
 
 void shell_prompt(void) {
-    printf("orchid> ");
+    printf("! ");
 }
 
 void shell_init(void) {
@@ -131,7 +168,9 @@ void shell_init(void) {
     shell_register("clear", "Clear the screen", cmd_clear);
     shell_register("mem",   "Show memory stats", cmd_mem);
     shell_register("echo",  "Print arguments", cmd_echo);
-    shell_register("halt",  "Halt the system", cmd_halt);
+    shell_register("halt",  "Halt the system", cmd_halt);    
+    shell_register("ls",   "List directory contents", cmd_ls);
+    shell_register("cat",  "Print file contents", cmd_cat);
 
     input_pos = 0;
 }

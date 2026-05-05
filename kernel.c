@@ -8,6 +8,8 @@
 #include "printf.h"
 #include "multiboot.h"
 #include "shell.h"
+#include "ata.h"
+#include "fs.h"
 
 static void hang(void) {
     asm volatile("cli; hlt");
@@ -42,6 +44,18 @@ void kernel_main(u32 magic, multiboot_info_t *mb_info) {
     
     printf("[INIT] Initializing PMM... ");
     pmm_init(mb_info);
+        printf("[INIT] Initializing ATA... ");
+    if (ata_init()) {
+        printf("ok\n");
+        printf("[INIT] Initializing FAT32... ");
+        if (fs_init()) {
+            printf("ok\n");
+        } else {
+            printf("no filesystem\n");
+        }
+    } else {
+        printf("no disk\n");
+    }
     printf("ok\n");
     
     printf("\n[READY] Orchid OS booted successfully\n");
