@@ -15,7 +15,7 @@ LDFLAGS = -T linker.ld -nostdlib
 OBJ = boot.o gdt_flush.o idt_flush.o \
       idt_stubs.o paging_stubs.o \
       kernel.o gdt.o pic.o paging.o idt.o pmm.o multiboot.o \
-      vga.o printf.o lib.o shell.oata.o fat32.o fs.o ramdisk.o
+      vga.o printf.o lib.o shell.o ata.o fat32.o fs.o ramdisk.o
 
 kernel.bin: $(OBJ)
 	$(LD) $(LDFLAGS) -o $@ $^
