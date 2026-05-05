@@ -11,7 +11,7 @@ doas /sbin/mkfs.fat -F 32 $DISK
 
 echo "Mounting..."
 mkdir -p $MNT
-doas /sbin/mount $DISK $MNT
+doas /usr/bin/mount $DISK $MNT
 
 echo "Creating test files..."
 doas sh -c 'echo "Hello from Orchid OS!" > '"$MNT"'/HELLO.TXT'
@@ -23,7 +23,7 @@ doas mkdir -p "$MNT/APPS"
 doas sh -c 'echo "Applications go here." > '"$MNT"'/APPS/INFO.TXT'
 
 echo "Unmounting..."
-doas /sbin/umount $MNT
+doas /usr/bin/umount $MNT
 rmdir $MNT
 
 echo "Done. $DISK is ready."
