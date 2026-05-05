@@ -47,4 +47,4 @@ iso: kernel.bin
 	grub-mkrescue -o orchid.iso iso/
 
 qemu: iso
-	qemu-system-i386 -cdrom orchid.iso -drive file=disk.img,format=raw,if=ide
+	qemu-system-i386 -cdrom orchid.iso -drive file=disk.img,format=raw,if=ide -boot d
